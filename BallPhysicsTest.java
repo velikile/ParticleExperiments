@@ -34,6 +34,7 @@ public class BallPhysicsTest extends JFrame
 	public static BufferedImage canvas = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
 	public static volatile MouseState MouseInfo= new MouseState(3);
 	public static volatile KeysState KeysInfo= new KeysState(256);
+	public static RewindData Rdata = null;
 	public static Graphics G;
 	public static SP panel = null;
 	public static float epsilon = 0.1f;
@@ -41,9 +42,12 @@ public class BallPhysicsTest extends JFrame
 	public static volatile Sentinal<V2[]> DrawnSegments= new Sentinal<V2[]>();
 	public static SleepTime SLEEPTIME = new SleepTime();
 	public static ExecutionCounter ExecCounter = new ExecutionCounter();
+	public static V3[]directions = new V3[ParticlesCount];
+	public static V3[]positions = new V3[ParticlesCount];
 
 	public BallPhysicsTest()
 	{
+		Rdata = new RewindData(ParticlesCount,600);
 		DrawnSegments.last = DrawnSegments;
 		DrawnSegments.first = DrawnSegments;
 		GraphicsConfiguration gc = getGraphicsConfiguration();
@@ -70,13 +74,20 @@ public class BallPhysicsTest extends JFrame
 		initGraphics();
 
 	}
-	public static void initGraphics(){
+
+	public static void initGraphics()
+	{
 		if(G==null)
 		{
 			G = fastersprite.createGraphics();
 			((Graphics2D)G).setBackground(Color.BLACK);
 		}
+	}
 
+	public static void fillRewind(int particleIndex,int frameCounter)
+	{
+		Rdata.positions[particleIndex][frameCounter%Rdata.StoredFrameCount] = positions[particleIndex].clone();
+		Rdata.directions[particleIndex][frameCounter%Rdata.StoredFrameCount] = directions[particleIndex].clone();
 	}
 	public static void flipAcrossX(V3 dir)
 	{
@@ -364,13 +375,12 @@ public class BallPhysicsTest extends JFrame
 	{
 		System.setProperty("java.awt.headless", "false");
 		//int [] binarySearchTest = new int[]{2,4,5,6,7,10,12,13,20,21,25,27,33,34};
-		float [] binarySearchTest = new float[]{2f,4f,5f,6f,7f,10f,12f,13f,20f,21f,25f,27f,33f,34f};
-		R.println(BinarySearchOnEqualOrClosest(binarySearchTest,8f,0,binarySearchTest.length-1,epsilon));
+		//float [] binarySearchTest = new float[]{2f,4f,5f,6f,7f,10f,12f,13f,20f,21f,25f,27f,33f,34f};
+		//R.println(BinarySearchOnEqualOrClosest(binarySearchTest,8f,0,binarySearchTest.length-1,epsilon));
 		
 		SLEEPTIME.sleeptime = 14;
 		int maxCountForSelectedParticles = 2;
-		V3[]directions = new V3[ParticlesCount];
-		V3[]positions = new V3[ParticlesCount];
+		
 
 		//new Thread(new ArcRenderVersion()).start();
 		FillDirectionAndPositionWithRandom(positions,directions,ParticlesCount,maxHeight);
@@ -430,6 +440,9 @@ public class BallPhysicsTest extends JFrame
 		//go through particles
 		//deflect add gravity 
 
+		ExecutionCounter rewindTimer = new ExecutionCounter();
+		rewindTimer.Start();
+		int frameCounter = 0;
 
 		while(run)
 		{	
@@ -484,11 +497,13 @@ public class BallPhysicsTest extends JFrame
 				clearDensityGrid(densityGrid);
 
 				G.setColor(MUC.white);
+				boolean timeToRecord = rewindTimer.getDiffNano()>100e6;
 				for(int i = 0; i<positions.length ; i++)
 				{
 					if(positions[i] == null)
 						continue;
-
+					if(timeToRecord)
+						fillRewind(i,frameCounter);
 
 					V3 position = positions[i];
 					V3 direction = directions[i];
