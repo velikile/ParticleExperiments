@@ -77,8 +77,8 @@ public class InfoRenderThread implements Runnable
 			Recording = new char[50];
 		}
 
-				int hashTableSize = 20000;
-				HashTable LINES = new HashTable(hashTableSize);
+		int hashTableSize = 20000;
+		HashTable LINES = new HashTable(hashTableSize);
 		while(work)
 		{
 				V2 prevPos = null;
@@ -107,6 +107,7 @@ public class InfoRenderThread implements Runnable
 					DrawValuesAndCheckedClickedChangeState();
 					drawDensityForHashTableForLines(LINES,hashTableSize);
 					afterUpdate = drawLinesAndReturnUpdatedDrawableSentinal(DrawnSegments.first);
+					Thread.yield();
 				}
 				while(MS.buttons[2] && DrawnSegments.Len()>0)
 				{
@@ -138,14 +139,25 @@ public class InfoRenderThread implements Runnable
 				}
 				if(DrawnSegmentsChanged)
 				{	
-					if(afterUpdate.first != null)					
+					if(afterUpdate.first != null)
+					{	
+						CommandBuffer.command = 2;		
 						DrawnSegments = afterUpdate.first;
-
-					ActivatorThread.interrupt();
+						ActivatorThread.interrupt();
+					}
 				}
 				else 
 				{   G.setColor(MUC.yellow);
 					drawLinesAndReturnUpdatedDrawableSentinal(DrawnSegments.first);
+				}
+				if(KS.buttons[K.LEFT]==1)
+				{
+					CommandBuffer.command = 0;
+					ActivatorThread.interrupt();
+					while(KS.buttons[K.LEFT]>=1)
+					{
+						Thread.yield();
+					}
 				}
 				G.setColor(MUC.white);
 				if(KS.buttons[ENTERKEYCODE]==1&&RecordUpdateTime(MouseRecordTime))
@@ -172,6 +184,7 @@ public class InfoRenderThread implements Runnable
 							default :
 							continue;
 						}
+						CommandBuffer.command =1;
 						ActivatorThread.interrupt();
 					}
 					catch(NumberFormatException ex)
