@@ -28,7 +28,7 @@ public class BallPhysicsTest extends JFrame
 
 	public static int maxHeight = height-200;
 	public static int maxWidth = width -1000;
-	public static int ParticlesCount = 2000;
+	public static int ParticlesCount = 20;
 	public static VolatileImage fastersprite = null;
 	public static BufferedImage sprite = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
 	public static BufferedImage canvas = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
@@ -379,8 +379,7 @@ public class BallPhysicsTest extends JFrame
 		//R.println(BinarySearchOnEqualOrClosest(binarySearchTest,8f,0,binarySearchTest.length-1,epsilon));
 		
 		SLEEPTIME.sleeptime = 14;
-		int maxCountForSelectedParticles = 2;
-		
+		int maxCountForSelectedParticles = 2000;
 
 		//new Thread(new ArcRenderVersion()).start();
 		FillDirectionAndPositionWithRandom(positions,directions,ParticlesCount,maxHeight);
@@ -497,13 +496,14 @@ public class BallPhysicsTest extends JFrame
 				clearDensityGrid(densityGrid);
 
 				G.setColor(MUC.white);
-				boolean timeToRecord = rewindTimer.getDiffNano()>100e6;
+				boolean timeToRecord = (rewindTimer.getDiffNano()-1e7)>0;
+			
 				for(int i = 0; i<positions.length ; i++)
 				{
 					if(positions[i] == null)
 						continue;
-					if(timeToRecord)
-						fillRewind(i,frameCounter);
+					 if(timeToRecord)
+					 	fillRewind(i,frameCounter);
 
 					V3 position = positions[i];
 					V3 direction = directions[i];
@@ -553,11 +553,11 @@ public class BallPhysicsTest extends JFrame
 
 					if(direction.x2()+direction.y2()>1000)
 						direction.sMul(1f/2);
-					
-
-				 	G.drawLine((int)position.x,(int)position.y,
-				 			   (int)position.x+(int)direction.x,
-				 			   (int)position.y+(int)direction.y);
+					if(position!=null &&direction!=null)
+						drawCircle(position.toV2(),(int)10);
+				 		// G.drawLine((int)position.x,(int)position.y,
+				 				   // (int)position.x+(int)direction.x,
+				 				   // (int)position.y+(int)direction.y);
 					//G.fillOval((int)20, (int)20, 50,50);
 					//G.setColor(lineColor);
 					position.add(direction);
@@ -572,6 +572,12 @@ public class BallPhysicsTest extends JFrame
 					{
 						position.z = 0;
 					}
+				}
+				if(timeToRecord)
+				{
+					//R.println(frameCounter++);
+					frameCounter++;
+					rewindTimer.Start();
 				}
 				if (particleRefreshCounter[currentIndex]==maxCountForSelectedParticles){
 					particleRefreshCounter[currentIndex] = 0;
@@ -596,7 +602,41 @@ public class BallPhysicsTest extends JFrame
 			catch(InterruptedException e)
 			{
 				R.println("main interrupted");
-				DrawnSegments = InfoRenderThread.DrawnSegments;
+				if(CommandBuffer.command == 2)
+					DrawnSegments = InfoRenderThread.DrawnSegments;
+				else if (CommandBuffer.command ==0)
+				{
+					ExecutionCounter rewinderTimer = new ExecutionCounter();
+					rewinderTimer.Start();
+					while(KeysInfo.buttons[K.LEFT]>0&&frameCounter>0)
+					{
+						//do every 100 ms;
+						 if((rewinderTimer.getDiffNano()-1e7)>0)
+						 {
+						 	if(frameCounter==0) break;
+						 	int frameindex = --frameCounter%Rdata.StoredFrameCount;
+						 	frameindex = frameindex>0?frameindex:0;
+						 	frameCounter = frameindex;
+						 	for(int c=0;c<Rdata.ParticlesCount;c++)
+						 	{
+						 		if(Rdata.positions[c][frameindex]!=null)
+						 		{
+						 			positions[c] = Rdata.positions[c][frameindex].clone();
+						 			directions[c] = Rdata.directions[c][frameindex].clone();
+						 		}
+						 		G.drawLine((int)positions[c].x,(int)positions[c].y,
+				 					   (int)positions[c].x+(int)directions[c].x,
+				 					   (int)positions[c].y+(int)directions[c].y);
+
+
+							}
+							b.repaint();
+							rewinderTimer.Start();
+						}
+					}
+					//Rdata.particles.
+				}
+
 			}
 		}
 	}
@@ -618,8 +658,11 @@ public class BallPhysicsTest extends JFrame
 					//adjust the the color value such that that  
 					//understanding the model of your data is more important 
 					//than the algorithm used in the big o notation 
-					G.setColor(new Color((int)((255*t))<<8|(int)(128*(1-t))));
-					G.fillRect((int)(i*widthPerCol),(int)(j*heightPerRow),(int)widthPerCol,(int)heightPerRow);
+					synchronized(G)
+					{
+						G.setColor(new Color((int)((255*t))<<8|(int)(128*(1-t))));
+						G.fillRect((int)(i*widthPerCol),(int)(j*heightPerRow),(int)widthPerCol,(int)heightPerRow);
+					}
 				}
 			}
 		}
