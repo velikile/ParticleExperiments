@@ -124,13 +124,6 @@ public class LineCollisionTesterThread implements Runnable
 				float positionY = position.y;
 				if(lineCounter>2)
 				{
-					// synchronized(BallPhysicsTest.G)
-					// {
-
-					// 	BallPhysicsTest.G.drawLine((int)position.x,(int)position.y,
-				 // 			   (int)position.x+(int)direction.x,
-				 // 			   (int)position.y+(int)direction.y);
-					// }
 					for(int l =0 ;l<Lines.length;l++)
 					{	
 						if(Lines[l][0]!=null&&Lines[l][1]!=null)

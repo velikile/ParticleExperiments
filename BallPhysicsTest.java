@@ -17,9 +17,6 @@ import java.awt.*;
 public class BallPhysicsTest extends JFrame
 {
 	public static int ENTERKEYCODE = 10;
-	public static int ONEKEYCODE  =49;
-	public static int TWOKEYCODE  =50;
-	public static int THREEKEYCODE  =51;
 	public static int[] imagePixelData;
 	public static int [] drawData;
 	public static int height = 1050;
@@ -28,7 +25,7 @@ public class BallPhysicsTest extends JFrame
 
 	public static int maxHeight = height-200;
 	public static int maxWidth = width -1000;
-	public static int ParticlesCount = 20;
+	public static int ParticlesCount = 1000;
 	public static VolatileImage fastersprite = null;
 	public static BufferedImage sprite = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
 	public static BufferedImage canvas = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
@@ -47,7 +44,7 @@ public class BallPhysicsTest extends JFrame
 
 	public BallPhysicsTest()
 	{
-		Rdata = new RewindData(ParticlesCount,600);
+		Rdata = new RewindData(ParticlesCount,6000);
 		DrawnSegments.last = DrawnSegments;
 		DrawnSegments.first = DrawnSegments;
 		GraphicsConfiguration gc = getGraphicsConfiguration();
@@ -479,11 +476,11 @@ public class BallPhysicsTest extends JFrame
 				C.x = MouseInfo.position.x;
 				C.y =MouseInfo.position.y;
 			}
-			if(KeysInfo.buttons[ONEKEYCODE]==1)
+			if(KeysInfo.buttons[K.ONEKEYCODE]==1)
 					arcDrawPoint=1;
-			if(KeysInfo.buttons[TWOKEYCODE]==1)
+			if(KeysInfo.buttons[K.TWOKEYCODE]==1)
 					arcDrawPoint=2;
-			if(KeysInfo.buttons[THREEKEYCODE]==1)
+			if(KeysInfo.buttons[K.THREEKEYCODE]==1)
 					arcDrawPoint=0;
 			if(CurrentState == DefaultState)
 			{
@@ -492,11 +489,11 @@ public class BallPhysicsTest extends JFrame
 				int currentIndex = ((ran.nextInt() % ParticlesCount )+ ParticlesCount)/2;
 				particleRefreshCounter[currentIndex]++;
 
-				drawDensityGrid(densityGrid);
-				clearDensityGrid(densityGrid);
+				//drawDensityGrid(densityGrid);
+				drawClearDensityGrid(densityGrid);
 
 				G.setColor(MUC.white);
-				boolean timeToRecord = (rewindTimer.getDiffNano()-1e7)>0;
+				boolean timeToRecord = (rewindTimer.getDiffNano()>1e7);
 			
 				for(int i = 0; i<positions.length ; i++)
 				{
@@ -554,7 +551,7 @@ public class BallPhysicsTest extends JFrame
 					if(direction.x2()+direction.y2()>1000)
 						direction.sMul(1f/2);
 					if(position!=null &&direction!=null)
-						drawCircle(position.toV2(),(int)10);
+						drawCircle(position.toV2(),(int)ParticlesCount/500);
 				 		// G.drawLine((int)position.x,(int)position.y,
 				 				   // (int)position.x+(int)direction.x,
 				 				   // (int)position.y+(int)direction.y);
@@ -608,14 +605,15 @@ public class BallPhysicsTest extends JFrame
 				{
 					ExecutionCounter rewinderTimer = new ExecutionCounter();
 					rewinderTimer.Start();
+					ExecutionCounter ClearCounter = new ExecutionCounter();
+					ClearCounter.Start();
+
 					while(KeysInfo.buttons[K.LEFT]>0&&frameCounter>0)
 					{
-						//do every 100 ms;
-						 if((rewinderTimer.getDiffNano()-1e7)>0)
+						//do every 5 ms;
+						 if(rewinderTimer.getDiffNano()>100e6)
 						 {
-						 	if(frameCounter==0) break;
 						 	int frameindex = --frameCounter%Rdata.StoredFrameCount;
-						 	frameindex = frameindex>0?frameindex:0;
 						 	frameCounter = frameindex;
 						 	for(int c=0;c<Rdata.ParticlesCount;c++)
 						 	{
@@ -627,12 +625,17 @@ public class BallPhysicsTest extends JFrame
 						 		G.drawLine((int)positions[c].x,(int)positions[c].y,
 				 					   (int)positions[c].x+(int)directions[c].x,
 				 					   (int)positions[c].y+(int)directions[c].y);
-
-
 							}
 							b.repaint();
 							rewinderTimer.Start();
 						}
+						if(ClearCounter.getDiffNano()>ClearCounter.oneMS*5e6)
+						{	
+							//G.clearRect(0,0,maxWidth,maxHeight);
+							ClearCounter.Start();
+
+						}
+						//Thread.yield();
 					}
 					//Rdata.particles.
 				}
@@ -640,16 +643,15 @@ public class BallPhysicsTest extends JFrame
 			}
 		}
 	}
-	public static void drawDensityGrid(int[][]densityGrid)
+	public static void drawClearDensityGrid(int [][]densityGrid)
 	{
 		int rows = densityGrid.length;
 		int cols = densityGrid[0].length;
 		float heightPerRow = maxHeight/rows; 
 		float widthPerCol =  maxWidth/cols;
-		for(int j = 0; j < cols ; j++)
-		{
-			for (int i = 0;i<rows;i++)
-			{			
+		for (int i =0;i<densityGrid.length ;i++ ) {
+			for (int j =0; j<densityGrid[0].length; j++) 
+			{
 				float t  = (float)(densityGrid[i][j])/ParticlesCount;
 				// lerp maxValue * t + minValue *(1-t)
 				if(t>0.01)
@@ -664,14 +666,6 @@ public class BallPhysicsTest extends JFrame
 						G.fillRect((int)(i*widthPerCol),(int)(j*heightPerRow),(int)widthPerCol,(int)heightPerRow);
 					}
 				}
-			}
-		}
-	}
-	public static void clearDensityGrid(int [][]densityGrid)
-	{
-		for (int i =0;i<densityGrid.length ;i++ ) {
-			for (int j =0; j<densityGrid[0].length; j++) 
-			{
 				densityGrid[i][j]= 0;	
 			}
 		}
@@ -685,16 +679,16 @@ public class BallPhysicsTest extends JFrame
 		{
 			int Y = (int)(position.y*(rows))/maxHeight;
 			int X = (int)(position.x*(cols))/maxWidth;
-			Y  = Y == rows ? rows-1: Y;
-			X  = X == cols ? cols-1: X;
+			Y  = Y >= rows ? rows-1: Y;
+			X  = X >= cols ? cols-1: X;
 			//R.println(X +"," + Y);
 
 			densityGrid[X][Y]++;
 			float t  = (float)(densityGrid[X][Y])/ParticlesCount;
+		
 			if(t >= 0.1)
 			{
 				direction.sub(gravity);
-
 				direction.add(colLeft);
 			}
 

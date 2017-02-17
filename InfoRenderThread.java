@@ -7,8 +7,6 @@ public class InfoRenderThread implements Runnable
 
 	public enum State {sleep,gravity,energyLoss,eraserSize}
 	State state = State.sleep;
-	public int ENTERKEYCODE = 10;
-	public int BACKSPACECODE = 8;
 	public static Graphics G = null;
 	public static boolean work = false;
 	public static MouseState MS;
@@ -160,7 +158,7 @@ public class InfoRenderThread implements Runnable
 					}
 				}
 				G.setColor(MUC.white);
-				if(KS.buttons[ENTERKEYCODE]==1&&RecordUpdateTime(MouseRecordTime))
+				if(KS.buttons[K.ENTERKEYCODE]==1&&RecordUpdateTime(MouseRecordTime))
 				{
 
 					String s = new String(Recording);
@@ -198,12 +196,12 @@ public class InfoRenderThread implements Runnable
 				
 				for(int i = 0 ; i<KS.buttons.length ;i++)
 				{
-					if (i == ENTERKEYCODE)
+					if (i == K.ENTERKEYCODE)
 						continue;
 					if (KS.buttons[i]==1)
 					{
 						KS.buttons[i]++;
-						if (i==BACKSPACECODE)
+						if (i==K.BACKSPACECODE)
 						{
 							RecordingCount = RecordingCount==0 ? 1: RecordingCount;
 							Recording[(--RecordingCount)] = (char)i;
