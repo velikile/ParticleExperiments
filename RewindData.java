@@ -18,6 +18,15 @@ public class RewindData
 		this.StoredFrameCount = StoredFrameCount;
 		positions=new V3[ParticlesCount][StoredFrameCount];
 		directions = new V3[ParticlesCount][StoredFrameCount];
+
+		for (int i =0;i<ParticlesCount ;i++ ) 
+		{
+			for (int j= 0;j<StoredFrameCount ;j++ ) 
+			{
+				positions[i][j] = new V3();
+				directions[i][j] = new V3();
+			}
+		}
 	}
 	// I'll create a circuler buffer where the current positiong goes Back while the data is valid 
 	// first step just do simple substitution for direction and positions for each frame 

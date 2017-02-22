@@ -6,28 +6,31 @@ import java.awt.image.BufferedImage;
 import java.awt.image.VolatileImage;
 import java.awt.image.DataBufferInt;
 import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Container;
+import java.awt.GraphicsConfiguration;
 import javax.swing.WindowConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.ImageIcon;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseEvent;
 import java.util.Random;
-import java.awt.*;
+import java.util.Arrays;
 
 public class BallPhysicsTest extends JFrame
 {
-	public static int ENTERKEYCODE = 10;
-	public static int[] imagePixelData;
-	public static int [] drawData;
+	public static int[] drawData;
 	public static int height = 1050;
 	public static int width  = 1680;
 
 
 	public static int maxHeight = height-200;
 	public static int maxWidth = width -1000;
-	public static int ParticlesCount = 1000;
+	public static int ParticlesCount = 2000;
 	public static VolatileImage fastersprite = null;
-	public static BufferedImage sprite = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
+
+	public static BufferedImage sprite = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB); 
 	public static BufferedImage canvas = new BufferedImage(width,height,BufferedImage.TYPE_INT_ARGB); 
 	public static volatile MouseState MouseInfo= new MouseState(3);
 	public static volatile KeysState KeysInfo= new KeysState(256);
@@ -35,16 +38,15 @@ public class BallPhysicsTest extends JFrame
 	public static Graphics G;
 	public static SP panel = null;
 	public static float epsilon = 0.1f;
-	public static V3 colLeft = new V3(-5,-2,0);
+	public static V3 colLeft = new V3(-5,0,0);
 	public static volatile Sentinal<V2[]> DrawnSegments= new Sentinal<V2[]>();
-	public static SleepTime SLEEPTIME = new SleepTime();
 	public static ExecutionCounter ExecCounter = new ExecutionCounter();
 	public static V3[]directions = new V3[ParticlesCount];
 	public static V3[]positions = new V3[ParticlesCount];
 
 	public BallPhysicsTest()
 	{
-		Rdata = new RewindData(ParticlesCount,6000);
+		Rdata = new RewindData(ParticlesCount,100);
 		DrawnSegments.last = DrawnSegments;
 		DrawnSegments.first = DrawnSegments;
 		GraphicsConfiguration gc = getGraphicsConfiguration();
@@ -52,12 +54,11 @@ public class BallPhysicsTest extends JFrame
 		setIgnoreRepaint( true );
 		setSize(width,height);
 		setTitle("Java Swing - JPanel Draw Filled Circle with Random Colors");
-		imagePixelData = ((DataBufferInt)sprite.getRaster().getDataBuffer()).getData();
-		drawData = ((DataBufferInt)canvas.getRaster().getDataBuffer()).getData();
+		drawData = ((DataBufferInt)sprite.getRaster().getDataBuffer()).getData();
 		//fastersprite = gc.createCompatibleVolatileImage(getWidth(), getHeight()); 
 		Container container = getContentPane();
 		panel = new SP(sprite);
-		
+		S.gravity = new V3(0,1,0);
 		
 		setFocusable(true);
 		setFocusTraversalKeysEnabled(false);
@@ -66,8 +67,8 @@ public class BallPhysicsTest extends JFrame
 		panel.addMouseMotionListener(MouseInfo);
 		container.add(panel);
 		setVisible(true);
-		fastersprite= panel.createVolatileImage(width,height);
-		fastersprite.setAccelerationPriority(1.0f);
+		//fastersprite= panel.createVolatileImage(width,height);
+		//fastersprite.setAccelerationPriority(1.0f);
 		initGraphics();
 
 	}
@@ -76,15 +77,18 @@ public class BallPhysicsTest extends JFrame
 	{
 		if(G==null)
 		{
-			G = fastersprite.createGraphics();
-			((Graphics2D)G).setBackground(Color.BLACK);
+			G = sprite.createGraphics();
+			//((Graphics2D)G).setBackground(Color.BLACK);
 		}
 	}
 
 	public static void fillRewind(int particleIndex,int frameCounter)
 	{
-		Rdata.positions[particleIndex][frameCounter%Rdata.StoredFrameCount] = positions[particleIndex].clone();
-		Rdata.directions[particleIndex][frameCounter%Rdata.StoredFrameCount] = directions[particleIndex].clone();
+		int index = Rdata.StoredFrameCount == 0 ? 0 :frameCounter%Rdata.StoredFrameCount;
+		Rdata.positions[particleIndex][index].x = positions[particleIndex].x;
+		Rdata.positions[particleIndex][index].y = positions[particleIndex].y;
+		Rdata.positions[particleIndex][index].z = positions[particleIndex].z;
+		//Rdata.directions[particleIndex][frameCounter%Rdata.StoredFrameCount] = directions[particleIndex];
 	}
 	public static void flipAcrossX(V3 dir)
 	{
@@ -280,7 +284,7 @@ public class BallPhysicsTest extends JFrame
 	}
 	public static boolean EnterIsPressed()
 	{
-		return KeysInfo.buttons[ENTERKEYCODE]==1;
+		return KeysInfo.buttons[K.ENTERKEYCODE]==1;
 	}
 
 	public static void SavePosition()
@@ -307,7 +311,7 @@ public class BallPhysicsTest extends JFrame
 		return retVal;
 	}
 	
-	public static V3 gravity = new V3(0f,1f,0f);
+	
 
 	public static class ArcRenderVersion implements Runnable
 	{
@@ -375,7 +379,7 @@ public class BallPhysicsTest extends JFrame
 		//float [] binarySearchTest = new float[]{2f,4f,5f,6f,7f,10f,12f,13f,20f,21f,25f,27f,33f,34f};
 		//R.println(BinarySearchOnEqualOrClosest(binarySearchTest,8f,0,binarySearchTest.length-1,epsilon));
 		
-		SLEEPTIME.sleeptime = 14;
+		S.sleeptime = 17;
 		int maxCountForSelectedParticles = 2000;
 
 		//new Thread(new ArcRenderVersion()).start();
@@ -397,8 +401,7 @@ public class BallPhysicsTest extends JFrame
 		int startX =0;
 		int startY =0;
 		Color lineColor = MUC.white;
-		EnergyLoss energyLoss = new EnergyLoss();
-		energyLoss.energyloss  = 1f/1.2f;
+		S.energyLoss  = 1f/1.2f;
 		int col = 0; 
 		Random ran = new Random();
 		int [] particleRefreshCounter = new int[ParticlesCount];
@@ -408,18 +411,14 @@ public class BallPhysicsTest extends JFrame
 		InfoRenderThread INFOPRINTTHREAD  = new InfoRenderThread(sprite,
 																 MouseInfo,
 																 KeysInfo,
-																 SLEEPTIME,
-															 Thread.currentThread()
-																 ,ExecCounter,
-																 energyLoss,
-																 gravity);
+															 	 Thread.currentThread()
+																 ,ExecCounter);
 		Thread InfoRenderer =  new Thread(INFOPRINTTHREAD);
 		InfoRenderer.start();
 		Thread ColDetectionDeflection = new Thread(new LineCollisionTesterThread(Thread.currentThread(),
 																				 DrawnSegments,
 																				 positions,
-																				 directions,
-																				 energyLoss));
+																				 directions));
 		ColDetectionDeflection.start();
 
 		Sentinal<V2[]> afterUpdate=new Sentinal<V2[]>();
@@ -442,14 +441,11 @@ public class BallPhysicsTest extends JFrame
 
 		while(run)
 		{	
-			ExecCounter.Start();
-			synchronized(G)
-			{
-			 	G.setColor(Color.BLACK);
-			 	G.clearRect(0,0,width,height);
-			 }
+			 ExecCounter.Start();
+			 Arrays.fill(drawData,0);
+			 InfoRenderer.interrupt();
 			//G.drawLine((int)A.x,(int)A.y,(int)C.x,(int)C.y);
-			// G.drawLine((int)B.x,(int)B.y,(int)D.x,(int)D.y);
+			//G.drawLine((int)B.x,(int)B.y,(int)D.x,(int)D.y);
 
 			// V2[] points = getArcPoints(A,C,B,15);
 			// for (int i = 0; i<points.length-1;i++)
@@ -459,7 +455,6 @@ public class BallPhysicsTest extends JFrame
 			// 			   (int)points[i+1].x,
 			// 			   (int)points[i+1].y);
 			// }
-
 
 			if(arcDrawPoint==0&&MouseInfo.buttons[1] )
 			{
@@ -484,23 +479,22 @@ public class BallPhysicsTest extends JFrame
 					arcDrawPoint=0;
 			if(CurrentState == DefaultState)
 			{
-				ParticlesQsort(positions,directions,0,ParticlesCount-1);
-				
 				int currentIndex = ((ran.nextInt() % ParticlesCount )+ ParticlesCount)/2;
 				particleRefreshCounter[currentIndex]++;
 
-				//drawDensityGrid(densityGrid);
 				drawClearDensityGrid(densityGrid);
 
 				G.setColor(MUC.white);
-				boolean timeToRecord = (rewindTimer.getDiffNano()>1e7);
+				boolean timeToRecord = (rewindTimer.getDiffNano()>1e8);
 			
 				for(int i = 0; i<positions.length ; i++)
 				{
 					if(positions[i] == null)
 						continue;
 					 if(timeToRecord)
-					 	fillRewind(i,frameCounter);
+					 {	
+						fillRewind(i,frameCounter);
+					 }
 
 					V3 position = positions[i];
 					V3 direction = directions[i];
@@ -528,7 +522,7 @@ public class BallPhysicsTest extends JFrame
 						// lineColor=new Color(new Random().nextInt());
 						flipAcrossX(direction);
 						position.y = maxHeight;
-						direction.sMul(energyLoss.energyloss);
+						direction.sMul(S.energyLoss);
 					}
 					if (position.y+direction.y < 0)
 					{
@@ -548,18 +542,29 @@ public class BallPhysicsTest extends JFrame
 						flipAcrossY(direction);
 					}
 
-					if(direction.x2()+direction.y2()>1000)
-						direction.sMul(1f/2);
-					if(position!=null &&direction!=null)
-						drawCircle(position.toV2(),(int)ParticlesCount/500);
-				 		// G.drawLine((int)position.x,(int)position.y,
-				 				   // (int)position.x+(int)direction.x,
-				 				   // (int)position.y+(int)direction.y);
+					// if(direction.x2()+direction.y2()>1000)
+					// 	direction.sMul(1f/2);
+					//drawCircle(position.toV2(),(int)0);
+					int ind  = (int)(position.x+(int)position.y*width);
+					if(ind>0&&ind<drawData.length && drawData[ind] != 255<<8)
+					{
+				 		drawData[ind] =255<<8;
+				 		if(ind-width>=0)
+				 			drawData[ind-width] =255<<8;
+				 		if(ind+width<drawData.length)
+				 			drawData[ind+width] =255<<8;
+				 		if(ind-1>=0 && ind+1<drawData.length)
+				 		{
+				 			drawData[ind-1] =255<<8;
+				 			drawData[ind+1] =255<<8;
+				 		}
+
+					}
 					//G.fillOval((int)20, (int)20, 50,50);
 					//G.setColor(lineColor);
 					position.add(direction);
 					{
-						direction.add(gravity);
+						direction.add(S.gravity);
 					}
 					 if(direction.x<=epsilon&&direction.x>-epsilon)
 					 	direction.x = 0f;
@@ -586,15 +591,25 @@ public class BallPhysicsTest extends JFrame
 					directions[currentIndex] = new V3(dirX,0,0);
 				}
 				drawCircle(MouseInfo.position,(int)radius);
+				InfoRenderThread.drawLDrawableSentinal(DrawnSegments.first);
 			}
 			try
-			{
-				((Graphics2D)G).setStroke(new BasicStroke(2));
+			{	
 				b.repaint();
-				G.setColor(new Color(-1));
-				
-				Thread.sleep(SLEEPTIME.sleeptime);
-				ExecCounter.getDiffNano();
+				long took = ExecCounter.getDiffMs();
+				if(took<S.sleeptime)
+				{
+					while(took<S.sleeptime)
+					{
+						Thread.sleep(S.sleeptime - took);
+						took = ExecCounter.getDiffMs();
+					}
+				}
+				else
+				{
+
+				}
+				ExecCounter.getDiffNano();//updates lastvalue
 			}
 			catch(InterruptedException e)
 			{
@@ -610,31 +625,45 @@ public class BallPhysicsTest extends JFrame
 
 					while(KeysInfo.buttons[K.LEFT]>0&&frameCounter>0)
 					{
-						//do every 5 ms;
-						 if(rewinderTimer.getDiffNano()>100e6)
+						//do every xe6 ns;
+						 //if(rewinderTimer.getDiffNano()>10e6)
 						 {
 						 	int frameindex = --frameCounter%Rdata.StoredFrameCount;
 						 	frameCounter = frameindex;
 						 	for(int c=0;c<Rdata.ParticlesCount;c++)
 						 	{
+						 		if(ClearCounter.getDiffNano()>30e6)
+								{	
+									G.clearRect(0,0,maxWidth+20,maxHeight+20);
+									ClearCounter.Start();
+								}
 						 		if(Rdata.positions[c][frameindex]!=null)
 						 		{
-						 			positions[c] = Rdata.positions[c][frameindex].clone();
-						 			directions[c] = Rdata.directions[c][frameindex].clone();
+						 			positions[c].x = Rdata.positions[c][frameindex].x;
+						 			positions[c].y = Rdata.positions[c][frameindex].y;
+						 			positions[c].z = Rdata.positions[c][frameindex].z;
+
+						 			//directions[c] = Rdata.directions[c][frameindex].clone();
 						 		}
-						 		G.drawLine((int)positions[c].x,(int)positions[c].y,
-				 					   (int)positions[c].x+(int)directions[c].x,
-				 					   (int)positions[c].y+(int)directions[c].y);
+						 		// G.drawLine((int)positions[c].x,(int)positions[c].y,
+				 				// 	   (int)positions[c].x+(int)directions[c].x,
+				 				// 	   (int)positions[c].y+(int)directions[c].y);
+				 				G.drawLine((int)positions[c].x,(int)positions[c].y,
+				 						   (int)positions[c].x,(int)positions[c].y);
 							}
 							b.repaint();
-							rewinderTimer.Start();
-						}
-						if(ClearCounter.getDiffNano()>ClearCounter.oneMS*5e6)
-						{	
-							//G.clearRect(0,0,maxWidth,maxHeight);
-							ClearCounter.Start();
+							try
+							{
+									Thread.sleep(30);
+							}
+							catch(Exception ex)
+							{
+								R.println("rewindInterrupted");
+							}	
+								//rewinderTimer.Start();
+							}
+					
 
-						}
 						//Thread.yield();
 					}
 					//Rdata.particles.
@@ -660,11 +689,8 @@ public class BallPhysicsTest extends JFrame
 					//adjust the the color value such that that  
 					//understanding the model of your data is more important 
 					//than the algorithm used in the big o notation 
-					synchronized(G)
-					{
 						G.setColor(new Color((int)((255*t))<<8|(int)(128*(1-t))));
 						G.fillRect((int)(i*widthPerCol),(int)(j*heightPerRow),(int)widthPerCol,(int)heightPerRow);
-					}
 				}
 				densityGrid[i][j]= 0;	
 			}
@@ -684,13 +710,21 @@ public class BallPhysicsTest extends JFrame
 			//R.println(X +"," + Y);
 
 			densityGrid[X][Y]++;
-			float t  = (float)(densityGrid[X][Y])/ParticlesCount;
+			 float t  = (float)(densityGrid[X][Y])/ParticlesCount;
 		
 			if(t >= 0.1)
-			{
-				direction.sub(gravity);
-				direction.add(colLeft);
-			}
+			 {
+			 	direction.sub(S.gravity);
+
+
+			 	int nextX = (int)((position.x+1)*(cols))/maxWidth;
+			 		nextX  = nextX >= cols ? cols-1: nextX;
+			 		if(R.abs(position.x-nextX)>R.abs(position.x-X))
+			 			direction.add(colLeft);
+			 		else 
+			 			direction.sub(colLeft);
+
+			 }
 
 		}
 	}

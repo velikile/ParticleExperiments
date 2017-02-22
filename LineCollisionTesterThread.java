@@ -4,7 +4,6 @@ public class LineCollisionTesterThread implements Runnable
 	public V3 [] positions = null;
 	public V3 [] directions = null;
 	public Thread Activator = null;
-	public EnergyLoss EC = null;
 	public V2[][] Lines = null;
 	public int lineCounter =0;
 	public int particleThreadsCount= 4;
@@ -12,14 +11,12 @@ public class LineCollisionTesterThread implements Runnable
 
 	public LineCollisionTesterThread(Thread Activator,Sentinal<V2[]> DrawnSegments,
 									V3[] positions,
-									V3[] directions,
-									EnergyLoss EC)
+									V3[] directions)
 	{
 		this.DrawnSegments = DrawnSegments;
 		this.Activator = Activator;
 		this.positions = positions;
 		this.directions = directions;
-		this.EC = EC;
 	}
 	public void run()
 	{
@@ -30,11 +27,12 @@ public class LineCollisionTesterThread implements Runnable
 		{	
 			if((System.nanoTime()-t)/1e6>1000)
 			{
-				t = System.nanoTime();  
+				t = System.nanoTime();
 			}
 			
 			if(DrawnSegments.first != BallPhysicsTest.DrawnSegments.first || firstIteration)
-			{	
+			{
+				R.println("Lines updated");
 				lineCounter = 0;
 				firstIteration = false;
 
@@ -75,12 +73,10 @@ public class LineCollisionTesterThread implements Runnable
 					}
 				}
 			}
+			Thread.yield();
 				//handleParticles(0,directions.length);
-			
-		
 		}
-			
-		}
+	}
 	public class positionsWorker implements Runnable
 	{	
 		int ThreadsCount = 0;
@@ -97,20 +93,24 @@ public class LineCollisionTesterThread implements Runnable
 			int xx = positionsWorkerId;
 			
 			int positionsPerThread = particlesCount/ThreadsCount;
-			try
-			{
+
 				while(true)
 				{
-					handleParticles(xx*positionsPerThread,(xx+1)*positionsPerThread);	
+					try
+					{
+						handleParticles(xx*positionsPerThread,(xx+1)*positionsPerThread);	
+						try{Thread.sleep(1);}
+						catch(Exception e)
+						{
+							R.println("positionsWorker interrupted");
+						}
+					}
+						catch(Exception e)
+						{
+							R.println(e);
+						}
 				}
-			}
-			catch(Exception e)
-			{
-				R.println(e);
-			}
-			
 		}
-
 	}
 
 	public void handleParticles(int start,int end)
@@ -119,20 +119,28 @@ public class LineCollisionTesterThread implements Runnable
 			{
 				V3 position = positions[i];
 				V3 direction = directions[i];
+				if(position== null || direction == null)
+					continue;
 				V3 posdir = V3.add(position,direction);
+
+
 				float posdirY = posdir.y;
 				float positionY = position.y;
-				if(lineCounter>2)
+				if(lineCounter>=1)
 				{
+					float prevDist = Float.POSITIVE_INFINITY;
 					for(int l =0 ;l<Lines.length;l++)
 					{	
+
+						if(position.y<Lines[l][0].y&&posdirY<Lines[l][0].y)
+								continue;
 						if(Lines[l][0]!=null&&Lines[l][1]!=null)
 						{
-						 V3 posIntersection = R.IntersectionPoint(
-						 	position,
-						 	direction,
-						 	Lines[l][0].toV3(),
-						 	V2.sub(Lines[l][1],Lines[l][0]).toV3());
+						 	V3 posIntersection = R.IntersectionPoint(
+						 			position,
+						 			direction,
+						 			Lines[l][0].toV3(),
+						 			V2.sub(Lines[l][1],Lines[l][0]).toV3());
 
 							if(!(posIntersection.x==0)||
 								!(posIntersection.y==0))
@@ -142,8 +150,18 @@ public class LineCollisionTesterThread implements Runnable
 									Lines[l][0].toV3(),
 									Lines[l][1].toV3(),
 									direction,
-									EC.energyloss);
+									S.energyLoss);
+								//break;
 							}
+							else 
+							{
+								float currentDist = V3.sub(posdir,Lines[l][0]).len();
+								if(prevDist>currentDist)
+								{
+									prevDist = currentDist;
+								}
+							}
+							
 						}
 					}
 				}
@@ -172,6 +190,42 @@ public class LineCollisionTesterThread implements Runnable
 		}
 		String toDump = buff.toString();	
 		R.OpenAndWriteToFile(fileName, toDump);
+	}
+
+	public Range GetClosestRangeForIntersection(V2[][]lines,V3 position,V3 direction,V3 posdir)
+	{
+		int start  = 0 ,end= 20;
+		float distanceFromIntersectionPoint = Float.POSITIVE_INFINITY;
+		Range currentRange = new Range(0,end);
+		boolean FoundPoint = false;
+		if (lines.length > 20)
+		{
+			for (int i=0; i<lines.length-end ; i++) 
+			{
+				int l = i+end;
+				V3 intersectionPoint =  R.IntersectionPoint(
+						 			position,
+						 			direction,
+						 			Lines[i][0].toV3(),
+						 			V2.sub(Lines[l][1],Lines[i][0]).toV3());
+
+				if(intersectionPoint.x != 0 ||intersectionPoint.y !=0)
+				{
+					FoundPoint = true;
+				}
+				float currentLength = V3.sub(intersectionPoint,posdir).len();
+
+				if(distanceFromIntersectionPoint>currentLength)
+				{
+					distanceFromIntersectionPoint = currentLength;
+					currentRange.start = i;
+					currentRange.end = l;
+				}
+			}
+		}
+		if(FoundPoint)
+			return currentRange;
+		return new Range(0,0);
 	}
 	public static int LinesPartition(V2[][]lines,int s, int f)
 	{		
@@ -212,10 +266,6 @@ public class LineCollisionTesterThread implements Runnable
 		V3 d1 = d0.l90();
 		direction.sMul(-1);
 		float l2 = direction.dot(d1);
-		if(R.in(l2,-0.1f,0.1f))
-		{
-			return;
-		}
 		d1.sMul(l2); // 
 		V3 a = V3.sub(direction,d1);
 		a.sMul(2);

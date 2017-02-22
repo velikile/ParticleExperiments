@@ -2,10 +2,10 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.MouseInfo;
 public class InfoRenderThread implements Runnable
 {
-
-	public enum State {sleep,gravity,energyLoss,eraserSize}
+	public enum State {sleep,gravity,energyLoss,eraserSize,particlesShown }
 	State state = State.sleep;
 	public static Graphics G = null;
 	public static boolean work = false;
@@ -15,16 +15,12 @@ public class InfoRenderThread implements Runnable
 	public LastRecordTime KeysRecordTime = new LastRecordTime();
 	public LastRecordTime MouseRecordTime = new LastRecordTime();
 	public String [] values = null;
-
 	public int startLeft = 0;
 	public int startTop = 0;
 	public int currentRowHeight = 0;
 	public int currentLetterWidth = 0;
 	public int RecordingCount = 0;
 	public char [] Recording = null;
-	public SleepTime SP = null;
-	public EnergyLoss EL = null;
-	public V3 Gravity = null;
 	public Thread ActivatorThread = null;
 	public ExecutionCounter EC=  new ExecutionCounter();
 	public static Sentinal<V2[]> DrawnSegments = null;
@@ -36,28 +32,22 @@ public class InfoRenderThread implements Runnable
 	}
 	public InfoRenderThread(BufferedImage sprite,
 							MouseState MS,
-							KeysState KS,
-							SleepTime SP,
+							KeysState KS,	
 							Thread ActivatorThread,
-							ExecutionCounter EC,
-							EnergyLoss EL,
-							V3 Gravity)
+							ExecutionCounter EC)
 	{
 		if(this.KS==null && this.MS ==null)
 		{
 			this.KS = KS;
 			this.MS=  MS;
-			this.SP = SP;
-			this.ActivatorThread = ActivatorThread;
 			this.EC = EC;
-			this.EL = EL;
-			this.Gravity = Gravity;
+			this.ActivatorThread = ActivatorThread;
 			this.DrawnSegments = BallPhysicsTest.DrawnSegments;
 
 		}
 		if(G==null)
 		{
-			G = BallPhysicsTest.fastersprite.getGraphics();
+			G = sprite.getGraphics();
 			G.setFont(new Font("Tahoma",Font.BOLD,12));
 		}
 		if(this.work)
@@ -77,35 +67,41 @@ public class InfoRenderThread implements Runnable
 
 		int hashTableSize = 20000;
 		HashTable LINES = new HashTable(hashTableSize);
+		ExecutionCounter T = new ExecutionCounter();
+		int topOffset = 25;
+		LinesGrid LG = new LinesGrid(widthSqueres,heightSqueres,startX,endX,startY,endY);
 		while(work)
 		{
+				T.Start();
 				V2 prevPos = null;
 				boolean DrawnSegmentsChanged = false;
 				Sentinal <V2[]> afterUpdate = new Sentinal<V2[]>();
 				
-				
 				while(MS.buttons[0])
-				{ 	DrawnSegmentsChanged = true;
-					if(prevPos != null && (int)MS.position.x!=(int)prevPos.x
-										 && MS.position.y!=(int)prevPos.y)
+				{ 	
+					DrawnSegmentsChanged = true;
+					int Mx = MouseInfo.getPointerInfo().getLocation().x;
+					int My = MouseInfo.getPointerInfo().getLocation().y-topOffset;
+					if(prevPos != null && Mx!=(int)prevPos.x
+										 && My!=(int)prevPos.y)
 					{
 						if(LINES.add(prevPos.clone(),MS.position.clone()))
 						{
+							LG.addLine(prevPos.clone(),new V2(Mx,My));
 							DrawnSegments.AddValue(new V2[]{prevPos.clone(),
-													MS.position.clone()});
-							prevPos = MS.position.clone();
+													new V2(Mx,My)});
+							prevPos = new V2(Mx,My);
 						}
 						else 
 							break;
 					}
 					else if(prevPos == null)
 					{
-						prevPos = MS.position.clone();
+						prevPos = new V2(Mx,My);
 					}
 					DrawValuesAndCheckedClickedChangeState();
-					drawDensityForHashTableForLines(LINES,hashTableSize);
+					//drawDensityForHashTableForLines(LINES,hashTableSize);
 					afterUpdate = drawLinesAndReturnUpdatedDrawableSentinal(DrawnSegments.first);
-					Thread.yield();
 				}
 				while(MS.buttons[2] && DrawnSegments.Len()>0)
 				{
@@ -123,16 +119,17 @@ public class InfoRenderThread implements Runnable
 						{
 							if(currentLinePoint.active)
 							{
+								currentLinePoint.DeleteNode();
 								LINES.remove(currentLinePoint.value[0],currentLinePoint.value[1]);
+								LG.removeLine(LinePoint.value[0].currentLinePOint.value[1]);
 								//LINES.remove(currentLinePoint.value[1],currentLinePoint.value[0]);
 								DrawnSegmentsChanged = true;
-								currentLinePoint.DeleteNode();
 								break;
 							}
 						}
 						currentLinePoint = currentLinePoint.next;
 					}
-					drawDensityForHashTableForLines(LINES,hashTableSize);
+					//drawDensityForHashTableForLines(LINES,hashTableSize);
 					afterUpdate = drawLinesAndReturnUpdatedDrawableSentinal(DrawnSegments.first);
 				}
 				if(DrawnSegmentsChanged)
@@ -145,8 +142,8 @@ public class InfoRenderThread implements Runnable
 					}
 				}
 				else 
-				{   G.setColor(MUC.yellow);
-					drawLinesAndReturnUpdatedDrawableSentinal(DrawnSegments.first);
+				{   G.setColor(MUC.yellow); 
+					//drawLDrawableSentinal(DrawnSegments.first);
 				}
 				if(KS.buttons[K.LEFT]==1)
 				{
@@ -168,13 +165,16 @@ public class InfoRenderThread implements Runnable
 						switch (state)
 						{
 							case gravity :
-								Gravity.y = Float.parseFloat(s);
+								S.gravity.y = Float.parseFloat(s);
 							break;
 							case sleep :
-								SP.sleeptime = Integer.parseInt(s);
+								S.sleeptime = Integer.parseInt(s);
 							break;
 							case energyLoss:
-								EL.energyloss = Float.parseFloat(s);
+								S.energyLoss = Float.parseFloat(s);
+							break;
+							case particlesShown:
+								S.particlesShown = Integer.parseInt(s);
 							break;
 							case eraserSize:
 								deleteRadius = Integer.parseInt(s);
@@ -220,17 +220,22 @@ public class InfoRenderThread implements Runnable
 				String [] Values = new String[]
 				{
 					"text",new String(Recording),
-					"SleepTime", Integer.toString(SP.sleeptime),
+					"SleepTime", Integer.toString(S.sleeptime),
 					"MouseInfo", MS.position.toString(),
 					"ExecutionCounter", Long.toString(EC.toMs(EC.lastValue)),
-					"EnergyLoss", Float.toString(EL.energyloss),
-					"Gravity", Gravity.toString(),
+					"EnergyLoss", Float.toString(S.energyLoss),
+					"Gravity", S.gravity.toString(),
 					"EraserSize", Integer.toString(deleteRadius),
 					"SentinalLength",Integer.toString(DrawnSegments.Len()),
 				};
-				SetPrintParams(1000 ,50,10,12,Values);
-				DrawValuesAndCheckedClickedChangeState();
-				
+				try{Thread.sleep(100000);}
+				catch(Exception e)
+				{
+					SetPrintParams(1000 ,50,10,12,Values);
+					DrawValuesAndCheckedClickedChangeState();
+				}
+				long took = T.getDiffMs();
+				//R.println(took);
 		}
 	}
 	public void drawDensityForHashTableForLines(HashTable LINES , int hashTableSize)
@@ -252,6 +257,7 @@ public class InfoRenderThread implements Runnable
 							float t= (float)linesAdded/amountsPerRect;
 							G.setColor(new Color((int)((255)*(t))|((int)(255*(1-t))<<8)));
 							G.drawRect(startX, startY + rectCounter*sizeY ,sizeX, sizeY);
+							G.setColor(MUC.white);
 						}
 						linesAdded = 0;
 						rectCounter++;
@@ -261,9 +267,7 @@ public class InfoRenderThread implements Runnable
 						linesAdded++;
 						//i +=  (amountsPerRect-1) - i % amountsPerRect;
 					}
-					
 				}
-
 	}
 	public Sentinal<V2[]> drawLinesAndReturnUpdatedDrawableSentinal(Sentinal<V2[]> currentLinePoint)
 	{
@@ -283,6 +287,28 @@ public class InfoRenderThread implements Runnable
 		}
 		return afterUpdate;
 	}
+	
+	public static void drawLDrawableSentinal(Sentinal<V2[]> currentLinePoint)
+	{
+		ExecutionCounter T = new ExecutionCounter();
+		T.Start();
+		while(currentLinePoint != null)
+		{	
+			if(currentLinePoint.active&&currentLinePoint.value!=null)
+			{
+				G.drawLine((int)currentLinePoint.value[0].x,
+						   (int)currentLinePoint.value[0].y,
+						   (int)currentLinePoint.value[1].x,
+						   (int)currentLinePoint.value[1].y);
+			}
+			currentLinePoint = currentLinePoint.next;
+		}
+		if(T.getDiffMs()>0)
+		{
+		}
+	}
+
+
 	public void SetPrintParams(int x ,int y,int width,int height,String[] Values)
 	{	
 		startLeft = x;
@@ -322,11 +348,11 @@ public class InfoRenderThread implements Runnable
 							}
 						}
 					}
-					G.drawString(values[i+1],
-								startLeft+G.getFontMetrics().stringWidth(values[i]),
-								startTop+i*currentRowHeight);
-
-					G.setColor(MUC.white);
+						G.drawString(values[i+1],
+										startLeft+G.getFontMetrics().stringWidth(values[i]),
+										startTop+i*currentRowHeight);
+	
+						G.setColor(MUC.white);
 					i+=2;
 				}
 			}

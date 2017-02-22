@@ -81,7 +81,7 @@ public class R {
 		if(u==0 && s==0)
 			return a;
 		else if(u==0 && s!=0)
-			return new V3(0,0,0);
+			return c;
 		else if (t>=0&&t<=1f&&w>=0&&w<1f)
 			return V3.add(a, V3.sMul(t, b));
 		

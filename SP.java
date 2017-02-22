@@ -11,23 +11,24 @@ public class SP extends JPanel
 		{
 			sprites = new BufferedImage[10];
 			sprites[0] = sprite;
-			setFocusable(true);
+			setFocusable(false);
 			setFocusTraversalKeysEnabled(false);
 		}
 		@Override
 		public void paintComponent(Graphics graphics)
 		{	
-			super.paintComponent(graphics);
-			graphics.drawImage(BallPhysicsTest.fastersprite, 0, 0, BallPhysicsTest.width, BallPhysicsTest.height, null);
-			BallPhysicsTest.fastersprite.flush();
+			
+			 super.paintComponent(graphics);
+	 		 // graphics.drawImage(BallPhysicsTest.fastersprite, 0, 0, BallPhysicsTest.width, BallPhysicsTest.height, null);
+	 		 // BallPhysicsTest.fastersprite.flush();
 			 for(BufferedImage sprite:sprites)
 			 {
 			 	if(sprite!=null)
 			 	{
 			 		graphics.drawImage(sprite,0,0,null);
-			 		sprite.flush();
 				}
 			 }
+			
 		}
 	
  
