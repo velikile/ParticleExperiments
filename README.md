@@ -5,9 +5,12 @@ Particles physics simulation
 
 clone the repo
 
-on ubuntu
+on ubuntu:
+
 sudo apt install openjdk-17-jdk
 
 cd JavaParticlese
+
 javac *.java
+
 java BallPhysicsTest
