@@ -69,7 +69,13 @@ public class InfoRenderThread implements Runnable
 		HashTable LINES = new HashTable(hashTableSize);
 		ExecutionCounter T = new ExecutionCounter();
 		int topOffset = 25;
-		LinesGrid LG = new LinesGrid(widthSqueres,heightSqueres,startX,endX,startY,endY);
+		int widthSqueres = 0;
+		int heightSqueres= 0;
+		int startX = 0;
+		int endX = 0;
+		int startY = 0;
+		int endY = 0;
+		LinesGrid LG = new LinesGrid(widthSqueres,heightSqueres,endX,endY);
 		while(work)
 		{
 				T.Start();
@@ -121,7 +127,7 @@ public class InfoRenderThread implements Runnable
 							{
 								currentLinePoint.DeleteNode();
 								LINES.remove(currentLinePoint.value[0],currentLinePoint.value[1]);
-								LG.removeLine(LinePoint.value[0].currentLinePOint.value[1]);
+								LG.removeLine(currentLinePoint.value[0],currentLinePoint.value[1]);
 								//LINES.remove(currentLinePoint.value[1],currentLinePoint.value[0]);
 								DrawnSegmentsChanged = true;
 								break;
