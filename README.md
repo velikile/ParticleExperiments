@@ -9,7 +9,7 @@ on ubuntu:
 
 sudo apt install openjdk-17-jdk
 
-cd JavaParticlese
+cd JavaParticles
 
 javac *.java
 
