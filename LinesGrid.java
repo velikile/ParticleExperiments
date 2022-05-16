@@ -20,11 +20,9 @@ public class LinesGrid
 		int BX =(int)((B.x/maxX)*width);
 		int AY =(int)((A.y/maxY)*height);
 		int BY =(int)((B.y/maxY)*height);
-                System.out.println("" + maxX + "," + maxY);
-                System.out.println("" + A.x + "," + A.y + "," + B.x + "," + B.y);
-                System.out.println("" + AX + "," + AY + "," + BX + "," + BY);
-                System.out.println("" + this.width + "," + this.height);
-		if (LinesData[AX][AY] == null)
+                if(AX >= this.width || BX >= this.width || AY >= this.height || BY >= this.height)
+                    return;
+		if(LinesData[AX][AY] == null)
 			LinesData[AX][AY] = new Sentinal<V2>();
 		LinesData[AX][AY].AddValue(new V2[]{A,B});
 		if (AX!=BX ||AY!=BY)

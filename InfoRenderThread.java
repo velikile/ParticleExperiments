@@ -91,10 +91,9 @@ public class InfoRenderThread implements Runnable
 				while(MS.buttons[0])
 				{ 	
 					DrawnSegmentsChanged = true;
-					int Mx = MouseInfo.getPointerInfo().getLocation().x;
-					int My = MouseInfo.getPointerInfo().getLocation().y-topOffset;
-					if(prevPos != null && Mx!=(int)prevPos.x
-										 && My!=(int)prevPos.y)
+					int Mx = (int)MS.position.x;
+					int My = (int)MS.position.y;
+					if(prevPos != null && Mx!=(int)prevPos.x && My!=(int)prevPos.y)
 					{
 						if(LINES.add(prevPos.clone(),MS.position.clone()))
 						{

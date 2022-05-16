@@ -12,7 +12,7 @@ public class MouseState implements MouseListener,MouseMotionListener
 	{
 		buttons = new boolean[numberOfButtons];
 	}
-		public void mouseMoved(MouseEvent e) 
+        public void mouseMoved(MouseEvent e) 
 	{
 		position.x = e.getX();
 		position.y = e.getY();
