@@ -1,14 +1,14 @@
 public class LinesGrid
 {
 
-	Sentinal[][][] LinesData;
+	Sentinal[][] LinesData = null;
 	int width;
 	int height;
 	int maxX;
 	int maxY;
 	public LinesGrid(int width,int height,int maxX,int maxY)			  
 	{
-		LinesData = new Sentinal[width][height][1];
+		LinesData = new Sentinal[width][height];
 		this.width = width;
 		this.height = height;
 		this.maxX = maxX;
@@ -20,14 +20,18 @@ public class LinesGrid
 		int BX =(int)((B.x/maxX)*width);
 		int AY =(int)((A.y/maxY)*height);
 		int BY =(int)((B.y/maxY)*height);
-		if (LinesData[AX][AY][0] == null)
-			LinesData[AX][AY][0] = new Sentinal<V2>();
-		LinesData[AX][AY][0].AddValue(new V2[]{A,B});
+                System.out.println("" + maxX + "," + maxY);
+                System.out.println("" + A.x + "," + A.y + "," + B.x + "," + B.y);
+                System.out.println("" + AX + "," + AY + "," + BX + "," + BY);
+                System.out.println("" + this.width + "," + this.height);
+		if (LinesData[AX][AY] == null)
+			LinesData[AX][AY] = new Sentinal<V2>();
+		LinesData[AX][AY].AddValue(new V2[]{A,B});
 		if (AX!=BX ||AY!=BY)
 		{
-			if (LinesData[BX][BY][0] == null)
-				LinesData[BX][BY][0] = new Sentinal<V2>();
-			LinesData[BX][BY][0].AddValue(new V2[]{A,B});
+			if (LinesData[BX][BY] == null)
+				LinesData[BX][BY] = new Sentinal<V2>();
+			LinesData[BX][BY].AddValue(new V2[]{A,B});
 		}
 	}
 	public void removeLine(V2 A,V2 B)
@@ -37,8 +41,8 @@ public class LinesGrid
 		int AY =(int)((A.y/maxY)*height);
 		int BY =(int)((B.y/maxY)*height);
 
-		Sentinal <V2[]> temp = LinesData[AX][AY][0].first;
-		Sentinal prev = LinesData[AX][AY][0].first;
+		Sentinal <V2[]> temp = LinesData[AX][AY].first;
+		Sentinal prev = LinesData[AX][AY].first;
 		while (temp!=null)
 		{
 			if(temp.value[0] != null && temp.value[1]!=null)
@@ -52,8 +56,8 @@ public class LinesGrid
 				temp = temp.next;
 		}
 		if(prev!=null)
-			LinesData[AX][AY][0].first = prev.first;
+			LinesData[AX][AY].first = prev.first;
 		else 
-			LinesData[AX][AY][0] = null;
+			LinesData[AX][AY] = null;
 	}
 }

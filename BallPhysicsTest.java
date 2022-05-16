@@ -101,9 +101,9 @@ public class BallPhysicsTest extends JFrame
 		dir.y *= -1;
 	}	
 	public static void FillDirectionAndPositionWithRandom(V3[]positions,
-														  V3[]directions,
-														  int size,
-														  int maxHeight)
+                                                              V3[]directions,
+                                                              int size,
+                                                              int maxHeight)
 	{
 		Random r = new Random();
 		if(positions == null || directions == null)
@@ -317,59 +317,59 @@ public class BallPhysicsTest extends JFrame
 	{
 		public void run()
 		{
-			while(true)
-			{
-				Sentinal <V2[]> currentLinePoints = DrawnSegments.first;
-				Sentinal <V2[]> prevLinePoints = null;
-				while(currentLinePoints != null)
-				{
-					if(currentLinePoints.value == null)
-					{
-						currentLinePoints = currentLinePoints.next;
-						continue;
-					}					
-					else if(prevLinePoints!=null)
-					{
-						V2[] prevPoints = prevLinePoints.value;
-						V2[] currentPoints = currentLinePoints.value;
-						if(currentPoints!=null && prevPoints!=null)
-						{
-							//R.println(currentPoints[0]+"-"+prevPoints[1]);
-							if(currentPoints[0].eq(prevPoints[1],10))
-							{
-								V2[]ArcPoints = getArcPoints(prevPoints[0],prevPoints[1],currentPoints[0],4);
-								for (int i = 0;  i<ArcPoints.length-1;i++)
-								{
-									V2 A = ArcPoints[i++];
-									V2 B = ArcPoints[i];
-									synchronized(G)
-									{
-										G.drawLine((int)A.x,(int)A.y,(int)B.x,(int)B.y);
-									}
-								}
-							}
-							else 
-							{
-								V2 A = prevPoints[0];
-								V2 B = prevPoints[1];
-								V2 C = currentPoints[0];
-								V2 D = currentPoints[1];
-								synchronized(G)
-									{
-										G.drawLine((int)A.x,(int)A.y,(int)B.x,(int)B.y);
-										G.drawLine((int)C.x,(int)C.y,(int)D.x,(int)D.y);
-									}
-							}
-						}
-					}
+                    while(true)
+                    {
+                        Sentinal <V2[]> currentLinePoints = DrawnSegments.first;
+                        Sentinal <V2[]> prevLinePoints = null;
+                        while(currentLinePoints != null)
+                        {
+                                if(currentLinePoints.value == null)
+                                {
+                                        currentLinePoints = currentLinePoints.next;
+                                        continue;
+                                }					
+                                else if(prevLinePoints!=null)
+                                {
+                                        V2[] prevPoints = prevLinePoints.value;
+                                        V2[] currentPoints = currentLinePoints.value;
+                                        if(currentPoints!=null && prevPoints!=null)
+                                        {
+                                                //R.println(currentPoints[0]+"-"+prevPoints[1]);
+                                                if(currentPoints[0].eq(prevPoints[1],10))
+                                                {
+                                                        V2[]ArcPoints = getArcPoints(prevPoints[0],prevPoints[1],currentPoints[0],4);
+                                                        for (int i = 0;  i<ArcPoints.length-1;i++)
+                                                        {
+                                                                V2 A = ArcPoints[i++];
+                                                                V2 B = ArcPoints[i];
+                                                                synchronized(G)
+                                                                {
+                                                                        G.drawLine((int)A.x,(int)A.y,(int)B.x,(int)B.y);
+                                                                }
+                                                        }
+                                                }
+                                                else 
+                                                {
+                                                        V2 A = prevPoints[0];
+                                                        V2 B = prevPoints[1];
+                                                        V2 C = currentPoints[0];
+                                                        V2 D = currentPoints[1];
+                                                        synchronized(G)
+                                                                {
+                                                                        G.drawLine((int)A.x,(int)A.y,(int)B.x,(int)B.y);
+                                                                        G.drawLine((int)C.x,(int)C.y,(int)D.x,(int)D.y);
+                                                                }
+                                                }
+                                        }
+                                }
 
-					prevLinePoints = currentLinePoints;
-					currentLinePoints = currentLinePoints.next;
-					
-				}
+                                prevLinePoints = currentLinePoints;
+                                currentLinePoints = currentLinePoints.next;
+                                
+                        }
 
-			}
-		}
+                    }
+            }
 
 	}
 	public static void main(String argv[])
@@ -409,10 +409,12 @@ public class BallPhysicsTest extends JFrame
 		// UI info 
 		float radius = 50f;
 		InfoRenderThread INFOPRINTTHREAD  = new InfoRenderThread(sprite,
-																 MouseInfo,
-																 KeysInfo,
-															 	 Thread.currentThread()
-																 ,ExecCounter);
+                                                                         MouseInfo,
+                                                                         KeysInfo,
+                                                                         Thread.currentThread()
+                                                                         ,ExecCounter,
+                                                                         0,0,
+                                                                         BallPhysicsTest.maxWidth,BallPhysicsTest.maxHeight);
 		Thread InfoRenderer =  new Thread(INFOPRINTTHREAD);
 		InfoRenderer.start();
 		Thread ColDetectionDeflection = new Thread(new LineCollisionTesterThread(Thread.currentThread(),

@@ -25,37 +25,44 @@ public class InfoRenderThread implements Runnable
 	public ExecutionCounter EC=  new ExecutionCounter();
 	public static Sentinal<V2[]> DrawnSegments = null;
 	public int deleteRadius = 5;
+        public int startRegionX = 0;
+        public int startRegionY = 0;
+        public int endRegionX = 0;
+        public int endRegionY = 0;
 	public boolean RecordUpdateTime(LastRecordTime LRT)
 	{
 		long prevTime = LRT.recordTime;
 		return (System.nanoTime()-prevTime)>1e8;//1e9 is a second
 	}
 	public InfoRenderThread(BufferedImage sprite,
-							MouseState MS,
-							KeysState KS,	
-							Thread ActivatorThread,
-							ExecutionCounter EC)
+                                MouseState MS,
+                                KeysState KS,	
+                                Thread ActivatorThread,
+                                ExecutionCounter EC,
+                                int startX,int startY,
+                                int endX,int endY)
 	{
-		if(this.KS==null && this.MS ==null)
-		{
-			this.KS = KS;
-			this.MS=  MS;
-			this.EC = EC;
-			this.ActivatorThread = ActivatorThread;
-			this.DrawnSegments = BallPhysicsTest.DrawnSegments;
-
-		}
-		if(G==null)
-		{
-			G = sprite.getGraphics();
-			G.setFont(new Font("Tahoma",Font.BOLD,12));
-		}
-		if(this.work)
-		{
-			 int a = 1/0;
-		}
-		else 
-			this.work = true;
+            this.endRegionX = endX;
+            this.endRegionY = endY;
+            if(this.KS==null && this.MS ==null)
+            {
+                    this.KS = KS;
+                    this.MS=  MS;
+                    this.EC = EC;
+                    this.ActivatorThread = ActivatorThread;
+                    this.DrawnSegments = BallPhysicsTest.DrawnSegments;
+            }
+            if(G==null)
+            {
+                    G = sprite.getGraphics();
+                    G.setFont(new Font("Tahoma",Font.BOLD,12));
+            }
+            if(this.work)
+            {
+                     int a = 1/0;
+            }
+            else 
+                    this.work = true;
 	}
 
 	public void run()
@@ -69,13 +76,11 @@ public class InfoRenderThread implements Runnable
 		HashTable LINES = new HashTable(hashTableSize);
 		ExecutionCounter T = new ExecutionCounter();
 		int topOffset = 25;
-		int widthSqueres = 0;
-		int heightSqueres= 0;
+		int widthSqueres = 10;
+		int heightSqueres= 10;
 		int startX = 0;
-		int endX = 0;
 		int startY = 0;
-		int endY = 0;
-		LinesGrid LG = new LinesGrid(widthSqueres,heightSqueres,endX,endY);
+		LinesGrid LG = new LinesGrid(widthSqueres,heightSqueres,this.endRegionX,endRegionY);
 		while(work)
 		{
 				T.Start();
